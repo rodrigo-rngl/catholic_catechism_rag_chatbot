@@ -1,19 +1,26 @@
-from typing import Mapping, Sequence, Optional
+from typing import Generic, Dict, List, TypeVar
 from pydantic import BaseModel, ConfigDict
+import numpy as np
 
-float_vec = Sequence[float]
-float_mat = Sequence[Sequence[float]]
+float_vec = List[float]
+float_mat = List[List[float]]
 
-# Base imutável para qualquer tipo de embedding
-class QueryEmbeddingBase(BaseModel):
-    model_config = ConfigDict(frozen=True, extra='forbid')
+Dense = TypeVar("Dense", bound=float_vec)
+Sparse = TypeVar("Sparse", bound=Dict[str, List[int | float]])
+Late = TypeVar("Late", bound=float_mat)
 
-    dense: Optional[float_vec]
-    sparse: Optional[Mapping[int, float]]
-    late: Optional[float_mat]
+
+# Base imutável (Interface)
+class QueryEmbeddingBase(BaseModel, Generic[Dense, Sparse, Late]):
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    dense: Dense
+    sparse: Sparse
+    late: Late
+
 
 # Tipos concretos
-class QueryHybridEmbedding(QueryEmbeddingBase):
+class QueryHybridEmbedding(QueryEmbeddingBase[float_vec, Dict[str, List[int | float]], float_mat]):
     dense: float_vec
-    sparse: Mapping[int, float]
+    sparse: Dict[str, List[int | float]]
     late: float_mat

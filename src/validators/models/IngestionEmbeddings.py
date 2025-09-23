@@ -1,17 +1,22 @@
-from typing import Tuple, List, Dict, Optional, Iterator, Any
+from typing import Tuple, List, Dict, Optional, Iterator, Any, TypeVar, Generic
 from pydantic import BaseModel, ConfigDict
+import numpy as np
 
 float_vec = List[float]
 float_mat = List[List[float]]
 
+Dense = TypeVar("Dense", bound=List[float_vec])
+Sparse = TypeVar("Sparse", bound=List[Dict[str, List[int | float]]])
+Late = TypeVar("Late", bound=List[float_mat])
 
-# Base imutável para qualquer tipo de embedding
-class IngestionEmbeddingsBase(BaseModel):
-    model_config = ConfigDict(frozen=True, extra='forbid')
 
-    dense: Optional[List[float_vec]]
-    sparse: Optional[List[Dict[str, List[int | float]]]]
-    late: Optional[List[float_mat]]
+# Base imutável (Interface)
+class IngestionEmbeddingsBase(BaseModel, Generic[Dense, Sparse, Late]):
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    dense: Dense
+    sparse: Sparse
+    late: Late
 
     def __length(self) -> int:
         for seq in (self.dense, self.sparse, self.late):
@@ -20,12 +25,11 @@ class IngestionEmbeddingsBase(BaseModel):
         return 0
 
     def __validate_lengths(self) -> None:
-        lengths: List[int] = [len(seq) for seq in (
-            self.dense, self.sparse, self.late) if seq is not None]
-
-        if lengths and any(length != lengths[0] for length in lengths):
+        n1, n2, n3 = len(self.dense), len(self.sparse), len(self.late)
+        if not (n1 == n2 == n3):
             raise ValueError(
-                f"O tamanho dos componentes não coincidem. Todos os componentes devem estar alinhados, possuim o mesmo tamanho.")
+                "Os tamanhos dos componentes não coincidem; devem ser iguais."
+            )
 
     def iter_components(self) -> Iterator[
             Tuple[
@@ -37,7 +41,7 @@ class IngestionEmbeddingsBase(BaseModel):
         self.__validate_lengths()
         n = self.__length()
 
-        def get(seq, i) -> None | Any:
+        def get(seq, i: int) -> None | Any:
             return None if seq is None else seq[i]
 
         for i in range(n):
@@ -49,11 +53,7 @@ class IngestionEmbeddingsBase(BaseModel):
 
 
 # Tipos concretos
-class IngestionHybridEmbeddings(IngestionEmbeddingsBase):
-    dense: List[float_vec]  # type: ignore
-    sparse: List[Dict[str, List[int | float]]]  # type: ignore
-    late: List[float_mat]  # type: ignore
-
-
-class IngestionDenseEmbeddings(IngestionEmbeddingsBase):
-    dense: List[float_vec]  # type: ignore
+class IngestionHybridEmbeddings(IngestionEmbeddingsBase[List[float_vec], List[Dict[str, List[int | float]]], List[float_mat]]):
+    dense: List[float_vec]
+    sparse: List[Dict[str, List[int | float]]]
+    late: List[float_mat]

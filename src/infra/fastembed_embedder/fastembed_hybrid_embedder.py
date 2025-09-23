@@ -5,6 +5,7 @@ from fastembed.late_interaction import LateInteractionTextEmbedding
 from src.infra.interfaces.embedder_interface import EmbedderInterface
 from src.validators.models.QueryEmbedding import QueryHybridEmbedding
 from src.validators.models.IngestionEmbeddings import IngestionHybridEmbeddings
+import numpy as np
 
 from src.config.logger_config import setup_logger
 logger = setup_logger(name="FastembedHybridEmbedder")
@@ -20,37 +21,56 @@ class FastembedHybridEmbedder(EmbedderInterface):
 
         dense_model, sparse_model, late_model = self.embedding_models
 
-        dense_embedding = dense_model.embed(texts)
-        sparse_embedding = sparse_model.embed(texts)
-        late_embedding = late_model.embed(texts)
+        try:
+            dense_embedding = dense_model.embed(texts)
+            sparse_embedding = sparse_model.embed(texts)
+            late_embedding = late_model.embed(texts)
 
-        dense_vecs = [vector.tolist() for vector in dense_embedding]
-        sparse_vecs = [dictionary.as_object()
-                       for dictionary in sparse_embedding]
-        late_mats = [matrix.tolist() for matrix in late_embedding]
+            dense_vecs = [vector.tolist() for vector in dense_embedding]
+            late_mats = [matrix.tolist() for matrix in late_embedding]
+            sparse_dicts_raw = [dictionary.as_object()
+                                for dictionary in sparse_embedding]
+            sparse_dicts = []
+            for dictionary in sparse_dicts_raw:
+                sparse_dicts.append({k: v.tolist()}
+                                    for k, v in dictionary.items())
 
-        logger.info(f'  Embeddings criados com sucesso!')
-        return IngestionHybridEmbeddings(
-            dense=dense_vecs,
-            sparse=sparse_vecs,  # type: ignore
-            late=late_mats
-        )
+            logger.info(f'  Embeddings criados com sucesso!')
+            return IngestionHybridEmbeddings(
+                dense=dense_vecs,
+                sparse=sparse_dicts,
+                late=late_mats
+            )
+        except Exception as exception:
+            logger.exception(f'Exceção ao gerar embeddings dos dados para ingestão.\n'
+                             f'Exception: {exception}')
+            raise
 
-    def embed_query(self, query: str) -> QueryHybridEmbedding:  # type: ignore
+    def embed_query(self, query: str) -> QueryHybridEmbedding:
         dense_model, sparse_model, late_model = self.embedding_models
 
-        dense_embedding = next(dense_model.embed(query) # type: ignore
-                               ).to_list()
-        sparse_embedding = next(sparse_model.embed(
-            query)).as_object()  # type: ignore
-        late_embedding = next(late_model.embed(
-            query)).to_list()  # type: ignore
+        try:
+            dense_embedding = dense_model.embed(query)
+            sparse_embedding = sparse_model.embed(query)
+            late_embedding = late_model.embed(query)
 
-        return QueryHybridEmbedding(
-            dense=dense_embedding,
-            sparse=sparse_embedding,
-            late=late_embedding
-        )
+            dense_vec = next(iter(dense_embedding)).tolist()
+            late_mat = next(iter(late_embedding)).tolist()
+
+            sparse_dict_raw: dict[str, np.ndarray] = next(
+                iter(sparse_embedding)).as_object()
+            sparse_dict: dict[str, list[float]] = {
+                k: v.tolist() for k, v in sparse_dict_raw.items()}
+
+            return QueryHybridEmbedding(
+                dense=dense_vec,
+                sparse=sparse_dict,
+                late=late_mat
+            )
+        except Exception as exception:
+            logger.exception(f'Exceção ao gerar embedding da query para busca híbrida.\n'
+                             f'Exception: {exception}')
+            raise
 
     @classmethod
     def __initialize_embedding_models(cls) -> Tuple[TextEmbedding, Bm25, LateInteractionTextEmbedding]:

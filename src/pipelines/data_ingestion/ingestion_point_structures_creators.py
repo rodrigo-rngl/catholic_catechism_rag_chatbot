@@ -2,6 +2,7 @@ import uuid
 from typing import List, Dict
 from abc import ABC, abstractmethod
 from qdrant_client.http.models import PointStruct, SparseVector
+from errors.types.class_not_implemented_error import ClassNotImplementedError
 from src.validators.models.IngestionEmbeddings import IngestionEmbeddingsBase
 from src.validators.models.IngestionEmbeddings import IngestionHybridEmbeddings
 
@@ -42,13 +43,15 @@ class HybridIngestionPointStructuresCreator(IngestionPointStructuresCreatorsInte
                     )
 
                     ingestion_points_list.append(point)
-                except Exception as error:
-                    logger.error(f'Erro ao criar um estrutura de ponto de ingestão.\n'
-                                 f'Error Message: {error}')
+
+                except Exception as exception:
+                    logger.exception(f'Exceção ao criar um estrutura de ponto de ingestão.\n'
+                                     f'Exception: {exception}')
                     raise
 
         logger.info(
             '  Estruturas de pontos para ingestão criadas com sucesso!')
+
         return ingestion_points_list
 
 
@@ -60,5 +63,5 @@ class IngestionPointStructuresCreatorsFactory:
         if isinstance(self.embeddings, IngestionHybridEmbeddings):
             return HybridIngestionPointStructuresCreator(embeddings=self.embeddings)
         else:
-            raise TypeError(
+            raise ClassNotImplementedError(
                 'Não há implementação para o tipo de IngestorEmbeddigs fornecido.')

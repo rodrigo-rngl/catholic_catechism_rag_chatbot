@@ -1,6 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Any
 from bs4.element import NavigableString, Tag, PageElement
 from src.errors.types.content_container_error import ContentContainerError
 from src.pipelines.data_ingestion.catechism_page_content_splitter import CatechismPageContentSplitter
@@ -62,9 +62,9 @@ class CatechismScrapper:
             response = requests.get(self.main_url + page_link, timeout=10)
             response.raise_for_status()  # Lança erro para códigos 4xx ou 5xx automaticamente
             return response
-        except Exception as error:
-            logger.error(
-                f"Erro ao fazer requisição para {self.main_url + page_link}: {error}")
+        except Exception as exception:
+            logger.exception(
+                f"Exceção ao enviar requisição para {self.main_url + page_link}: {exception}")
             raise
 
     @classmethod
@@ -73,14 +73,14 @@ class CatechismScrapper:
 
         if len(table_tags) < 2:
             raise ContentContainerError(
-                "Quantidade de table Tags (<table>) insuficientes. No momento em que a aplicação foi desenvolida, todo o conteúdo da página estava contido dentro da segunda Tag <table>.")
+                "Quantidade de table Tags (<table>) insuficientes. No momento em que a aplicação foi desenvolvida, todo o conteúdo da página estava contido dentro da segunda Tag <table>.")
 
         table_tag = table_tags[1]
         tds = table_tag.find_all("td")  # type: ignore
 
         if len(tds) < 2:
             raise ContentContainerError(
-                "Quantidade de td Tags (<td>) insuficientes. No momento em que a aplicação foi desenvolida, todo o conteúdo da página estava contido dentro da segunda Tag <td>.")
+                "Quantidade de td Tags (<td>) insuficientes. No momento em que a aplicação foi desenvolvida, todo o conteúdo da página estava contido dentro da segunda Tag <td>.")
 
         container_tag = tds[1]
         if len(container_tag.find_all("p")) == 0:  # type: ignore
@@ -92,7 +92,6 @@ class CatechismScrapper:
     @classmethod
     def __flush_buffer(cls, buffer: List, page_content: List) -> Tuple[List, List]:
         if buffer:
-            # junta tudo num único parágrafo
             buffer = [element.strip() for element in buffer]
 
             joined = " ".join(buffer).strip()
@@ -133,7 +132,7 @@ class CatechismScrapper:
 
         return buffer, page_content
 
-    def __scrape_page_content(self, content_container: Tag):
+    def __scrape_page_content(self, content_container: Tag) -> List[Any]:
         page_content = []
         buffer = []  # acumula nós consecutivos fora de <p>
 

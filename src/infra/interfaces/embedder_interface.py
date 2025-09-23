@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Dict, List
 
 from src.validators.models.IngestionEmbeddings import IngestionEmbeddingsBase
+from src.validators.models.QueryEmbedding import QueryEmbeddingBase
 
 
 class EmbedderInterface(ABC):
@@ -10,5 +11,5 @@ class EmbedderInterface(ABC):
         pass
 
     @abstractmethod
-    def embed_query(self, query: str) -> Dict:
+    def embed_query(self, query: str) -> QueryEmbeddingBase:
         pass

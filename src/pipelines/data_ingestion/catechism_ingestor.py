@@ -41,7 +41,7 @@ class CatechismIngestor:
             ingestion_points: List[PointStruct] = ingestion_point_structures_creator.create(
                 payloads=batch_payloads)
 
-            self.repository.upsert_data(ingestion_points=ingestion_points)
+            self.repository.upsert_points(ingestion_points=ingestion_points)
 
             self.n_paragraphs_sent += batch_size
             logger.info(
