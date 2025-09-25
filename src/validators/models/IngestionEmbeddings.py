@@ -1,12 +1,17 @@
-from typing import Tuple, List, Dict, Optional, Iterator, Any, TypeVar, Generic
+from typing import Tuple, List, Optional, Iterator, Any, TypeVar, Generic, List
 from pydantic import BaseModel, ConfigDict
-import numpy as np
 
 float_vec = List[float]
 float_mat = List[List[float]]
 
+
+class SparseDict(BaseModel):
+    indices: List[int]
+    values: List[float]
+
+
 Dense = TypeVar("Dense", bound=List[float_vec])
-Sparse = TypeVar("Sparse", bound=List[Dict[str, List[int | float]]])
+Sparse = TypeVar("Sparse", bound=List[SparseDict])
 Late = TypeVar("Late", bound=List[float_mat])
 
 
@@ -34,7 +39,7 @@ class IngestionEmbeddingsBase(BaseModel, Generic[Dense, Sparse, Late]):
     def iter_components(self) -> Iterator[
             Tuple[
                 Optional[float_vec],
-                Optional[Dict[str, List[int | float]]],
+                Optional[SparseDict],
                 Optional[float_mat]
             ]]:
 
@@ -53,7 +58,7 @@ class IngestionEmbeddingsBase(BaseModel, Generic[Dense, Sparse, Late]):
 
 
 # Tipos concretos
-class IngestionHybridEmbeddings(IngestionEmbeddingsBase[List[float_vec], List[Dict[str, List[int | float]]], List[float_mat]]):
+class IngestionHybridEmbeddings(IngestionEmbeddingsBase[List[float_vec], List[SparseDict], List[float_mat]]):
     dense: List[float_vec]
-    sparse: List[Dict[str, List[int | float]]]
+    sparse: List[SparseDict]
     late: List[float_mat]

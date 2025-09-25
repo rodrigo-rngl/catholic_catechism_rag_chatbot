@@ -5,7 +5,8 @@ import pendulum
 
 
 class QueryIn(BaseModel):
-    query: str
+    query: str = Field(..., min_length=30, max_length=100, description="Questionamento sobre a doutrina da igreja.", examples=[
+                       'Quais são os frutos do Espírito Santo?'])
 
 
 class QueryOut(QueryIn):

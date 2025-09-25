@@ -5,5 +5,5 @@ from src.validators.models.Query import QueryOut
 
 class ControllerInterface(ABC):
     @abstractmethod
-    def handle(self, query: QueryOut) -> HttpResponse:
+    async def handle(self, query: QueryOut) -> HttpResponse:
         pass

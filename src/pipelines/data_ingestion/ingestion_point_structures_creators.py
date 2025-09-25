@@ -2,7 +2,7 @@ import uuid
 from typing import List, Dict
 from abc import ABC, abstractmethod
 from qdrant_client.http.models import PointStruct, SparseVector
-from errors.types.class_not_implemented_error import ClassNotImplementedError
+from src.errors.types.class_not_implemented_error import ClassNotImplementedError
 from src.validators.models.IngestionEmbeddings import IngestionEmbeddingsBase
 from src.validators.models.IngestionEmbeddings import IngestionHybridEmbeddings
 
@@ -37,9 +37,10 @@ class HybridIngestionPointStructuresCreator(IngestionPointStructuresCreatorsInte
                         vector={
                             "dense": dense,
                             "colbertv2.0": late,
-                            "sparse": SparseVector(**sparse)  # type: ignore
+                            "sparse": SparseVector(indices=sparse.indices,
+                                                   values=sparse.values)
                         },
-                        payload={"text": text, "metadata": meta},
+                        payload={"text": text, "metadata": meta}
                     )
 
                     ingestion_points_list.append(point)

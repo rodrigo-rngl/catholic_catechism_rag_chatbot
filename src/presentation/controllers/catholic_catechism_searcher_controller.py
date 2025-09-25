@@ -8,9 +8,9 @@ class CatholicCatechismSeacherController(ControllerInterface):
     def __init__(self, use_case: CatholicCatechismSearcher) -> None:
         self.use_case = use_case
 
-    def handle(self, query: QueryOut) -> HttpResponse:
+    async def handle(self, query: QueryOut) -> HttpResponse:
 
-        search_results = self.use_case.search(query=query.query)
+        search_results = await self.use_case.search(query=query.query)
 
         return HttpResponse(status_code=200,
                             body={'result': search_results})

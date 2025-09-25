@@ -12,14 +12,16 @@ class CatholicCatechismSearcher:
         self.repository = repository
         self.embedder = embedder
 
-    def search(self, query: str) -> List[Dict[str, Any]]:
+    async def search(self, query: str) -> List[Dict[str, Any]]:
         if query is None:
             raise BadQueryError(f'A query não pode estar vazia.')
+        if not isinstance(query, str):
+            raise BadQueryError(f'A query deve ser do tipo string.')
 
-        query_embedding: QueryEmbeddingBase = self.embedder.embed_query(
+        query_embedding: QueryEmbeddingBase = await self.embedder.embed_query(
             query=query)
 
-        search_outputs: List[SearchOutput] = self.repository.search_points(
+        search_outputs: List[SearchOutput] = await self.repository.search_points(
             embedding=query_embedding)
 
         return [output.model_dump() for output in search_outputs]

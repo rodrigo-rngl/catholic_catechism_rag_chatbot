@@ -20,32 +20,32 @@ class QdrantVectorDBRepository:
         self.collection_creator = collection_creator
         self.points_searcher = points_searcher
 
-    def create_collection(self) -> None:
+    async def create_collection(self) -> None:
         if self.collection_creator is None:
             raise CollectionCreatorNotFoundError(
                 f"O criador de coleção não foi passado. O criador de coleção não pode ser None.")
 
-        if self.__collection_already_exist() and self.__collection_already_populated():
+        if await self.__collection_already_exist() and await self.__collection_already_populated():
             logger.info(
-                f"A coleção '{self.collection_name}' já existe existe e já possui dados."
-                f"Ela será excluída e criada novamente.")
-            self.__delete_collection()
-            self.collection_creator.create(
+                f"A coleção '{self.collection_name}' já existe e já possui dados.\n"
+                f"A coleção será excluída e criada novamente.")
+            await self.__delete_collection()
+            await self.collection_creator.create(
                 collection_name=self.collection_name)
-        elif not self.__collection_already_exist():
-            self.collection_creator.create(
+        elif not await self.__collection_already_exist():
+            await self.collection_creator.create(
                 collection_name=self.collection_name)
 
-    def upsert_points(self, ingestion_points: List[PointStruct]) -> None:
-        if not self.__collection_already_exist():
+    async def upsert_points(self, ingestion_points: List[PointStruct]) -> None:
+        if not await self.__collection_already_exist():
             raise CollectionNotFoundError(
                 f"A coleção '{self.collection_name}' não existe para que estruras de pontos possam ser armazenadas.")
 
-        with QdrantVectorDBConnectionHandler() as qdrant:
+        async with QdrantVectorDBConnectionHandler() as qdrant:
             logger.info(
                 f"  Enviando {len(ingestion_points)} estruturas de pontos de ingestão para '{self.collection_name}'...")
             try:
-                qdrant.client.upsert(
+                await qdrant.client.upsert(
                     collection_name=self.collection_name, points=ingestion_points)
 
                 logger.info(
@@ -55,9 +55,25 @@ class QdrantVectorDBRepository:
                                  f"Exception: {exception}")
                 raise
 
+    async def search_points(self, embedding: QueryEmbeddingBase) -> List[SearchOutput]:
+        if self.points_searcher is None:
+            raise PointsSearcherNotFoundError(
+                f"O buscador de pontos de vetoriais não foi passado. O buscador não pode ser None.")
+
+        if not await self.__collection_already_populated():
+            raise CollectionNotFoundError(
+                f"A coleção '{self.collection_name}' não existe! Assim, não há com realizar a busca de pontos vetoriais.")
+
+        search_outputs: List[SearchOutput] = await self.points_searcher.search(
+            collection_name=self.collection_name,
+            embedding=embedding)
+
+        return search_outputs
+    
+    async def get_collection_points_count(self) -> None:
+        async with QdrantVectorDBConnectionHandler() as qdrant:
             try:
-                collection_info = qdrant.client.get_collection(
-                    self.collection_name)
+                collection_info = await qdrant.client.get_collection(self.collection_name)
                 logger.info(
                     f"A coleção '{self.collection_name}' agora possui {collection_info.points_count} parágrafos.")
             except Exception as exception:
@@ -65,47 +81,33 @@ class QdrantVectorDBRepository:
                                  f"Exception: {exception}")
                 raise
 
-    def search_points(self, embedding: QueryEmbeddingBase) -> List[SearchOutput]:
-        if self.points_searcher is None:
-            raise PointsSearcherNotFoundError(
-                f"O buscador de pontos de vetoriais não foi passado. O buscador não pode ser None.")
-
-        if not self.__collection_already_populated():
-            raise CollectionNotFoundError(
-                f"A coleção '{self.collection_name}' não existe! Assim, não há com realizar a busca de pontos vetoriais.")
-
-        search_outputs: List[SearchOutput] = self.points_searcher.search(
-            collection_name=self.collection_name,
-            embedding=embedding)
-
-        return search_outputs
-
-    def __collection_already_exist(self) -> bool:
-        with QdrantVectorDBConnectionHandler() as qdrant:
+    async def __collection_already_exist(self) -> bool:
+        async with QdrantVectorDBConnectionHandler() as qdrant:
             try:
-                return qdrant.client.collection_exists(collection_name=self.collection_name)
+                return await qdrant.client.collection_exists(collection_name=self.collection_name)
             except Exception as exception:
                 logger.exception(f"Ocorreu uma falha ao verificar se a coleção '{self.collection_name}' no Qdrant existe.\n"
                                  f"Exception: {exception}.")
                 raise
 
-    def __collection_already_populated(self) -> bool:
-        if not self.__collection_already_exist():
+    async def __collection_already_populated(self) -> bool:
+        if not await self.__collection_already_exist():
             raise CollectionNotFoundError(
                 f"A coleção '{self.collection_name}' não existe! Com isso, não dá para checar se a mesma está populada.")
 
-        with QdrantVectorDBConnectionHandler() as qdrant:
+        async with QdrantVectorDBConnectionHandler() as qdrant:
             try:
-                return int(qdrant.client.count(collection_name=self.collection_name).count) > 0
+                count_result = await qdrant.client.count(collection_name=self.collection_name)
+                return int(count_result.count) > 0
             except Exception as exception:
                 logger.exception(f"Ocorreu uma falha ao verificar se a coleção '{self.collection_name}' no Qdrant já está populada.\n"
                                  f"Exception: {exception}.")
                 raise
 
-    def __delete_collection(self) -> None:
-        with QdrantVectorDBConnectionHandler() as qdrant:
+    async def __delete_collection(self) -> None:
+        async with QdrantVectorDBConnectionHandler() as qdrant:
             try:
-                qdrant.client.delete_collection(
+                await qdrant.client.delete_collection(
                     collection_name=self.collection_name)
                 logger.info(
                     f"A coleção '{self.collection_name}' foi excluída com sucesso.")

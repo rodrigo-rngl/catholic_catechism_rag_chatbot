@@ -8,11 +8,11 @@ logger = setup_logger(name="QdrantHybridCollectionCreator")
 
 
 class QdrantHybridCollectionCreator(QdrantCollectionCreatorInterface):
-    def create(self, collection_name: str) -> None:
-        with QdrantVectorDBConnectionHandler() as qdrant:
+    async def create(self, collection_name: str) -> None:
+        async with QdrantVectorDBConnectionHandler() as qdrant:
             try:
                 logger.info(f"Criando a coleção '{collection_name}'...")
-                qdrant.client.create_collection(
+                await qdrant.client.create_collection(
                     collection_name=collection_name,
                     vectors_config={
                         "dense": VectorParams(size=768, distance=Distance.COSINE),

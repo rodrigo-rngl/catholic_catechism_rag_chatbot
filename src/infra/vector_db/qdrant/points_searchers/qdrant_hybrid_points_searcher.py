@@ -1,8 +1,7 @@
-from typing import Any, List
-
+from typing import List
 from qdrant_client.http.models import Prefetch
 from src.validators.models.SearchOutput import SearchOutput
-from src.validators.models.QueryEmbedding import QueryEmbeddingBase
+from src.validators.models.QueryEmbedding import QueryEmbeddingBase, SparseDict
 from src.infra.interfaces.qdrant_points_searcher_interface import QdrantPointsSearcherInterface
 from src.infra.vector_db.qdrant.settings.qdrant_vector_db_connection_handler import QdrantVectorDBConnectionHandler
 
@@ -11,10 +10,10 @@ logger = setup_logger(name="QdrantHybridPointsSearcher")
 
 
 class QdrantHybridPointsSearcher(QdrantPointsSearcherInterface):
-    def search(self, collection_name: str, embedding: QueryEmbeddingBase) -> List[SearchOutput]:
-        with QdrantVectorDBConnectionHandler() as qdrant:
+    async def search(self, collection_name: str, embedding: QueryEmbeddingBase) -> List[SearchOutput]:
+        async with QdrantVectorDBConnectionHandler() as qdrant:
             try:
-                search_result = qdrant.client.query_points(
+                search_result = await qdrant.client.query_points(
                     collection_name=collection_name,
                     prefetch=[
                         Prefetch(
@@ -23,7 +22,7 @@ class QdrantHybridPointsSearcher(QdrantPointsSearcherInterface):
                             limit=20,
                         ),
                         Prefetch(
-                            query=embedding.sparse,
+                            query=embedding.sparse.model_dump(),
                             using="sparse",
                             limit=20,
                         ),

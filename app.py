@@ -1,18 +1,18 @@
-from textwrap import indent
 from dotenv import load_dotenv
 from src.validators.models.Query import QueryIn, QueryOut
 from src.main.composers.catholic_catechism_hybrid_searcher_composer import catholic_catechism_hybrid_searcher_composer
 from src.errors.handle_errors import handle_errors
 import json
+import asyncio
 
 load_dotenv()
 
 
-def hybrid_search(query: QueryIn) -> None:
+async def hybrid_search(query: QueryIn) -> None:
     try:
         query = QueryOut(**query.model_dump())
         controller = catholic_catechism_hybrid_searcher_composer()
-        http_response = controller.handle(query=query)
+        http_response = await controller.handle(query=query)
 
         print(
             f'[{http_response.status_code}]:\n {json.dumps(http_response.body, indent=4, ensure_ascii=False)}')
@@ -26,4 +26,4 @@ def hybrid_search(query: QueryIn) -> None:
 query = QueryIn(
     query='Quais são os frutos do Espírito Santo que devemos produzir?')
 
-hybrid_search(query=query)
+asyncio.run(hybrid_search(query=query))

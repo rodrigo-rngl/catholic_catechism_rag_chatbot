@@ -1,3 +1,4 @@
+import asyncio
 from typing import List, Dict, Any
 from qdrant_client.http.models import PointStruct
 from src.infra.interfaces.embedder_interface import EmbedderInterface
@@ -15,34 +16,41 @@ class CatechismIngestor:
                  repository: QdrantVectorDBRepository) -> None:
         self.embedder = embedder
         self.repository = repository
+        self.__batch_semaphore = asyncio.Semaphore(2)
+        self.__batch_position = 0
 
-        self.batch_position = 0
-        self.n_paragraphs_sent = 0
-
-    def ingest(self, payloads: List[Dict[str, Any]], batch_size: int) -> None:
+    async def ingest(self, payloads: List[Dict[str, Any]], batch_size: int) -> None:
         n_batches = (len(payloads) + batch_size - 1) // batch_size
         logger.info(
             f"Iniciando a ingestão de {len(payloads)} payloads em {n_batches} batches...")
 
-        for i in range(0, len(payloads), batch_size):
-            batch_payloads = payloads[i:i + batch_size]
+        tasks = [
+            self.__process_batch(payloads[i:i+batch_size])
+            for i in range(0, len(payloads), batch_size)
+        ]
 
-            self.batch_position += 1
+        await asyncio.gather(*tasks, return_exceptions=False)
+
+        await self.repository.get_collection_points_count()
+
+    async def __process_batch(self, payloads: List[Dict[str, Any]]) -> None:
+        async with self.__batch_semaphore:
+            self.__batch_position += 1
+            batch_position = self.__batch_position
             logger.info(
-                f"Enviando {len(batch_payloads)} parágrafos no {self.batch_position}º batch...")
+                f"Enviando {len(payloads)} parágrafos no {batch_position}º batch...")
 
-            texts = [payload['text'] for payload in batch_payloads]
+            texts = [payload['text'] for payload in payloads]
 
-            embeddings: IngestionEmbeddingsBase = self.embedder.embed_ingestion(
+            embeddings: IngestionEmbeddingsBase = await self.embedder.embed_ingestion(
                 texts=texts)
 
             ingestion_point_structures_creator = IngestionPointStructuresCreatorsFactory(
                 embeddings=embeddings).produce()
             ingestion_points: List[PointStruct] = ingestion_point_structures_creator.create(
-                payloads=batch_payloads)
+                payloads=payloads)
 
-            self.repository.upsert_points(ingestion_points=ingestion_points)
+            await self.repository.upsert_points(ingestion_points=ingestion_points)
 
-            self.n_paragraphs_sent += batch_size
             logger.info(
-                f"{self.n_paragraphs_sent}/{len(payloads)} parágrafos transformados com sucesso!")
+                f"{len(payloads)} parágrafos do {batch_position}º foram transformados com sucesso!")

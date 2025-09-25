@@ -6,5 +6,5 @@ from src.validators.models.SearchOutput import SearchOutput
 
 class QdrantPointsSearcherInterface(ABC):
     @abstractmethod
-    def search(self, collection_name: str, embedding: QueryEmbeddingBase) -> List[SearchOutput]:
+    async def search(self, collection_name: str, embedding: QueryEmbeddingBase) -> List[SearchOutput]:
         pass

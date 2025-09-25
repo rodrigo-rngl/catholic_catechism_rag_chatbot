@@ -7,9 +7,9 @@ from src.validators.models.QueryEmbedding import QueryEmbeddingBase
 
 class EmbedderInterface(ABC):
     @abstractmethod
-    def embed_ingestion(self, texts: List[str]) -> IngestionEmbeddingsBase:
+    async def embed_ingestion(self, texts: List[str]) -> IngestionEmbeddingsBase:
         pass
 
     @abstractmethod
-    def embed_query(self, query: str) -> QueryEmbeddingBase:
+    async def embed_query(self, query: str) -> QueryEmbeddingBase:
         pass

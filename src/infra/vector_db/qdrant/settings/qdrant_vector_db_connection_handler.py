@@ -1,5 +1,5 @@
 import os
-from qdrant_client import QdrantClient
+from qdrant_client import AsyncQdrantClient
 
 from src.config.logger_config import setup_logger
 logger = setup_logger(name="QdrantVectorDBConnectionHandler")
@@ -12,9 +12,9 @@ class QdrantVectorDBConnectionHandler:
 
         self.client = self.__create_db_client()
 
-    def __create_db_client(self) -> QdrantClient:
+    def __create_db_client(self) -> AsyncQdrantClient:
         try:
-            client = QdrantClient(
+            return AsyncQdrantClient(
                 url=self.__url,
                 api_key=self.__api_key,
                 prefer_grpc=True
@@ -24,10 +24,8 @@ class QdrantVectorDBConnectionHandler:
                          f'Exception: {exception}')
             raise
 
-        return client
-
-    def __enter__(self):
+    async def __aenter__(self):
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
-        self.client.close()
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self.client.close()
