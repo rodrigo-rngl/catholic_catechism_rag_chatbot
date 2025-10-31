@@ -1,7 +1,8 @@
-from typing import Mapping
+from typing import Mapping, Optional
 from pydantic import BaseModel
 
 
 class SearchOutput(BaseModel):
     text: str
-    metadata: Mapping[str, str]
+    localization: Optional[Mapping[str, str]] = None
+    similarity_score: float

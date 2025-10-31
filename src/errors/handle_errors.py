@@ -1,35 +1,60 @@
-from src.errors.types.bad_query_error import BadQueryError
-from src.validators.models.HttpResponse import HttpResponse
-from src.errors.types.content_container_error import ContentContainerError
-from src.errors.types.collection_not_found_error import CollectionNotFoundError
-from src.errors.types.class_not_implemented_error import ClassNotImplementedError
-from src.errors.types.points_searcher_not_found_error import PointsSearcherNotFoundError
-from src.errors.types.collection_creator_not_found_error import CollectionCreatorNotFoundError
-
+from datetime import datetime
 from src.config.logger_config import setup_logger
+from src.errors.types.domain_error import DomainError
+from src.errors.types.validation_domain_error import ValidationDomainError
+from src.validators.models.HttpRequest import HttpRequestOut
+from src.validators.models.HttpResponse import HttpResponse
+
 logger = setup_logger(name="handle_errors")
 
 
-def handle_errors(error: Exception) -> HttpResponse:
-    if isinstance(error, (BadQueryError, ClassNotImplementedError, CollectionCreatorNotFoundError,
-                          CollectionNotFoundError, ContentContainerError, PointsSearcherNotFoundError)):
-        logger.error(error.message)
-        return HttpResponse(
-            status_code=error.status_code,
-            body={
-                "errors": [{
-                    "title": error.name,
-                    "detail": error.message
-                }]
-            }
-        )
+def handle_errors(http_request: HttpRequestOut, error: Exception) -> HttpResponse:
+    end_time = datetime.now(tz=http_request.created_in.tzinfo)
+    took_ms = int((end_time - http_request.created_in).total_seconds() * 1000)
 
-    return HttpResponse(
-        status_code=500,
-        body={
-            "errors": [{
-                "title": "Server Error",
-                "detail": str(error)
-            }]
-        }
-    )
+    if isinstance(error, ValidationDomainError):
+        logger.error(error.message)
+        return HttpResponse(id=http_request.id,
+                            status_code=error.status_code,
+                            created_in=http_request.created_in,
+                            took_ms=took_ms,
+                            query=http_request.query,
+                            top_k=http_request.top_k,
+                            body={
+                                "error": [{
+                                    "title": error.name,
+                                    "detail": error.message,
+                                    "validation_errors": error.body
+                                }]
+                            })
+
+    if isinstance(error, DomainError):
+        logger.error(error.message)
+        return HttpResponse(id=http_request.id,
+                            status_code=error.status_code,
+                            created_in=http_request.created_in,
+                            took_ms=took_ms,
+                            query=http_request.query,
+                            top_k=http_request.top_k,
+                            body={
+                                "error": [{
+                                    "title": error.name,
+                                    "detail": error.message,
+                                    "query_validation": error.body
+                                }]
+                            })
+
+    logger.exception(
+        f"Exceção ao gerar resposta à requsição: {http_request.id}")
+    return HttpResponse(id=http_request.id,
+                        status_code=500,
+                        created_in=http_request.created_in,
+                        took_ms=took_ms,
+                        query=http_request.query,
+                        top_k=http_request.top_k,
+                        body={
+                            "error": [{
+                                "title": "Server Error",
+                                "detail": "Interval Server Error"
+                            }]
+                        })

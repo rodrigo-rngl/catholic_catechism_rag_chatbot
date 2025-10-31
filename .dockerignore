@@ -1,0 +1,8 @@
+**/__pycache__/
+
+run.py
+
+src/domain/services/catechism_page_content_splitter.py
+src/domain/services/catechism_paragraphs_ingestor.py
+src/domain/services/catechism_scrapper.py
+src/main/pipelines

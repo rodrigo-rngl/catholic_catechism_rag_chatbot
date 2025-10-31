@@ -10,9 +10,9 @@ class SparseDict(BaseModel):
     values: List[float]
 
 
-Dense = TypeVar("Dense", bound=List[float_vec])
-Sparse = TypeVar("Sparse", bound=List[SparseDict])
-Late = TypeVar("Late", bound=List[float_mat])
+Dense = TypeVar("Dense")
+Sparse = TypeVar("Sparse")
+Late = TypeVar("Late")
 
 
 # Base imutável (Interface)
@@ -25,16 +25,17 @@ class IngestionEmbeddingsBase(BaseModel, Generic[Dense, Sparse, Late]):
 
     def __length(self) -> int:
         for seq in (self.dense, self.sparse, self.late):
-            if seq is not None:
+            if seq is not None and isinstance(seq, list):
                 return len(seq)
         return 0
 
     def __validate_lengths(self) -> None:
-        n1, n2, n3 = len(self.dense), len(self.sparse), len(self.late)
-        if not (n1 == n2 == n3):
-            raise ValueError(
-                "Os tamanhos dos componentes não coincidem; devem ser iguais."
-            )
+        if isinstance(self.dense, list) and isinstance(self.sparse, list) and isinstance(self.late, list):
+            n1, n2, n3 = len(self.dense), len(self.sparse), len(self.late)
+            if not (n1 == n2 == n3):
+                raise ValueError(
+                    "Os tamanhos dos componentes não coincidem; devem ser iguais."
+                )
 
     def iter_components(self) -> Iterator[
             Tuple[
@@ -57,8 +58,18 @@ class IngestionEmbeddingsBase(BaseModel, Generic[Dense, Sparse, Late]):
             )
 
 
+IngestionEmbeddingsType = TypeVar(
+    "IngestionEmbeddingsType", bound=IngestionEmbeddingsBase[Any, Any, Any])
+
+
 # Tipos concretos
 class IngestionHybridEmbeddings(IngestionEmbeddingsBase[List[float_vec], List[SparseDict], List[float_mat]]):
     dense: List[float_vec]
     sparse: List[SparseDict]
     late: List[float_mat]
+
+
+class IngestionDenseEmbeddings(IngestionEmbeddingsBase[List[float_vec], List[SparseDict] | None, List[float_mat] | None]):
+    dense: List[float_vec]
+    sparse: List[SparseDict] | None = None
+    late: List[float_mat] | None = None

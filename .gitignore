@@ -1,4 +1,5 @@
 .env
 .python-version
-src/data
+catechism_payloads.json
+
 **/__pycache__/

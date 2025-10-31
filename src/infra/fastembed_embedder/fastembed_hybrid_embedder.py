@@ -2,7 +2,7 @@ from fastembed import TextEmbedding
 from typing import Tuple, List, Any
 from fastembed.sparse.bm25 import Bm25
 from fastembed.late_interaction import LateInteractionTextEmbedding
-from src.infra.interfaces.embedder_interface import EmbedderInterface
+from src.infra.interfaces.fastembed_embedder_interface import FastembedEmbedderInterface
 from src.validators.models.QueryEmbedding import QueryHybridEmbedding
 from src.validators.models.QueryEmbedding import SparseDict as QuerySparseDict
 from src.validators.models.IngestionEmbeddings import IngestionHybridEmbeddings
@@ -15,13 +15,13 @@ from src.config.logger_config import setup_logger
 logger = setup_logger(name="FastembedHybridEmbedder")
 
 
-class FastembedHybridEmbedder(EmbedderInterface):
+class FastembedHybridEmbedder(FastembedEmbedderInterface[IngestionHybridEmbeddings, QueryHybridEmbedding]):
     def __init__(self) -> None:
         self.embedding_models = self.__initialize_embedding_models()
 
     async def embed_ingestion(self, texts: List[str]) -> IngestionHybridEmbeddings:
         logger.info(
-            f"  Transformando {len(texts)} parágrafos em embeddings...")
+            f"Transformando {len(texts)} parágrafos em embeddings...")
 
         dense_task = asyncio.to_thread(self.generate_dense_embedding, texts)
         sparse_task = asyncio.to_thread(self.generate_sparse_embedding, texts)
@@ -31,7 +31,7 @@ class FastembedHybridEmbedder(EmbedderInterface):
             dense_task, sparse_task, late_task
         )
 
-        logger.info(f'  Embeddings criados com sucesso!')
+        logger.info(f'Embeddings criados com sucesso!')
         return IngestionHybridEmbeddings(
             dense=dense_vecs,
             sparse=sparse_dicts,
@@ -40,7 +40,7 @@ class FastembedHybridEmbedder(EmbedderInterface):
 
     async def embed_query(self, query: str) -> QueryHybridEmbedding:
         logger.info(
-            f"  Transformando query em embeddings...")
+            f"Transformando query em embeddings...")
 
         dense_task = asyncio.to_thread(self.generate_dense_embedding, query)
         sparse_task = asyncio.to_thread(self.generate_sparse_embedding, query)
@@ -50,7 +50,7 @@ class FastembedHybridEmbedder(EmbedderInterface):
             dense_task, sparse_task, late_task
         )
 
-        logger.info(f'  Embeddings criados com sucesso!')
+        logger.info(f'Embeddings criados com sucesso!')
         return QueryHybridEmbedding(
             dense=dense_vec,
             sparse=sparse_dict,

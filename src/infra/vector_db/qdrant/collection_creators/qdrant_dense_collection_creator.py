@@ -1,13 +1,12 @@
-from qdrant_client import models
 from qdrant_client.http.models import VectorParams, Distance
 from src.infra.interfaces.qdrant_collection_creator_interface import QdrantCollectionCreatorInterface
 from src.infra.vector_db.qdrant.settings.qdrant_vector_db_connection_handler import QdrantVectorDBConnectionHandler
 
 from src.config.logger_config import setup_logger
-logger = setup_logger(name="QdrantHybridCollectionCreator")
+logger = setup_logger(name="QdrantDenseCollectionCreator")
 
 
-class QdrantHybridCollectionCreator(QdrantCollectionCreatorInterface):
+class QdrantDenseCollectionCreator(QdrantCollectionCreatorInterface):
     async def create(self, collection_name: str) -> None:
         async with QdrantVectorDBConnectionHandler() as qdrant:
             try:
@@ -15,18 +14,7 @@ class QdrantHybridCollectionCreator(QdrantCollectionCreatorInterface):
                 await qdrant.client.create_collection(
                     collection_name=collection_name,
                     vectors_config={
-                        "dense": VectorParams(size=768, distance=Distance.COSINE),
-                        "colbertv2.0": VectorParams(
-                            size=128,
-                            distance=Distance.COSINE,
-                            multivector_config=models.MultiVectorConfig(
-                                comparator=models.MultiVectorComparator.MAX_SIM,
-                            ),
-                        ),
-                    },
-                    sparse_vectors_config={
-                        "sparse": models.SparseVectorParams(modifier=models.Modifier.IDF),
-                    },
+                        "dense": VectorParams(size=768, distance=Distance.COSINE)}
                 )
 
                 logger.info(
