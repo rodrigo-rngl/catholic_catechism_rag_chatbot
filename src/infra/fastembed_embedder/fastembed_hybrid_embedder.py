@@ -63,21 +63,21 @@ class FastembedHybridEmbedder(FastembedEmbedderInterface[IngestionHybridEmbeddin
             f'Inicializando modelos de Embeddings para Busca Híbrida...')
 
         logger.info(f'Inicializando o Dense Embedding...')
-        dense_embedding_model = TextEmbedding(
-            "sentence-transformers/paraphrase-multilingual-mpnet-base-v2")
+        # dense_embedding_model = TextEmbedding(
+        #    "sentence-transformers/paraphrase-multilingual-mpnet-base-v2")
         logger.info(f'O Dense Embedding foi inicializado com sucesso!')
 
         logger.info(f'Inicializando o Sparse Embedding...')
-        sparse_embedding_model = Bm25("Qdrant/bm25")
+        # sparse_embedding_model = Bm25("Qdrant/bm25")
         logger.info(f'O Sparse Embedding foi inicializado com sucesso!')
 
         logger.info(f'Inicializando o Late Interaction Embedding...')
-        late_embedding_model = LateInteractionTextEmbedding(
-            "colbert-ir/colbertv2.0")
+        # late_embedding_model = LateInteractionTextEmbedding(
+        #    "colbert-ir/colbertv2.0")
         logger.info(
             f'O Late Interaction Embedding foi inicializado com sucesso!')
 
-        return dense_embedding_model, sparse_embedding_model, late_embedding_model
+        # return dense_embedding_model, sparse_embedding_model, late_embedding_model
 
     def generate_dense_embedding(self, texts: str | List[str]) -> List[Any]:
         dense_model, _, _ = self.embedding_models

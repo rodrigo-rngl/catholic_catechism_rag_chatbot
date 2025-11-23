@@ -1,5 +1,7 @@
 .env
 .python-version
 catechism_payloads.json
+Dockerfile
+cic-rag-api_server_instance_rsa-key-pair_stored_dell-g3.pem
 
 **/__pycache__/
