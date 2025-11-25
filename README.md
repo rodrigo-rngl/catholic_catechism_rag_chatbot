@@ -34,6 +34,11 @@ A partir desse propósito, o projeto também virou um laboratório onde aprendo,
 
     O `CatholicCatechismSeacherController` calcula `took_ms`, decide entre respostas `200` (sucesso) e `406` (ask_clarifying) e empacota tudo no `HttpResponse`. Em falhas de domínio ou infraestrutura, o `handle_errors` garante mensagens consistentes para quem consome a API.
 
+## Como utilizar?
+<p align="center">
+  <img src="src/img/readme-tutorial.gif" width="1800" />
+</p>
+
 <div style="margin: 20px;"></div>
 
 # Estrutura de Pastas do Projeto
