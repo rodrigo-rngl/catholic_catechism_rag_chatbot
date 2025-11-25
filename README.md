@@ -13,7 +13,7 @@ A **API RAG do Catecismo da Igreja Católica** nasceu de uma vontade simples: us
 
 Até o momento, API expõe um endpoint dedicado, capaz de receber perguntas catequéticas, validar sua adequação e devolver os parágrafos mais relevantes do Catecismo com localização completa e transparência doutrinal.
 
-A partir desse propósito, o projeto também virou um laboratório onde aprendo, treino e aplico conceitos de desenvolvimento importantes como: mineração de dados, embeddigns de dados, armazenamento de dados e consumo em banco de dados vetoriais, boas práticas de arquitetura de software e codificação, modelagem de sistemas e deploy de aplicações.
+A partir desse propósito, o projeto também virou um laboratório onde aprendo, treino e aplico conceitos de desenvolvimento importantes como: <u>mineração de dados, embeddigns de dados, armazenamento de dados e consumo em banco de dados vetoriais, boas práticas de arquitetura de software e codificação, modelagem de sistemas e deploy de aplicações</u>. Por esse projeto ter se tornado esse laboratório de aprendizagem, desenvolvi também uma aplicação de chatbot que usa essa API para demonstrar um caso de uso válido: o [**AmicusDei**](https://amicusdei.streamlit.app/), um assistente teológico criado para responder dúvidas sobre a Doutrina e a Fé da Igreja Católica, com base direta no Catecismo da Igreja Católica (CIC).
 
 <div style="margin: 20px;"></div>
 

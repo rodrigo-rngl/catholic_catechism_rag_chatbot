@@ -45,11 +45,12 @@ app = FastAPI(
     "Que esta API ajude você a criar experiências que não apenas respondem perguntas, mas também anunciam a esperança cristã com fidelidade, ternura e responsabilidade.\n\n"
 
     "- **Repositório do Projeto**: [github.com/rodrigo-rngl/catholic_catechism_rag_api](https://github.com/rodrigo-rngl/catholic_catechism_rag_api)\n"
-    "- **AmicusDei** (Assistente Teológico Católico criado a partir desta API): \n",
+    "- [**AmicusDei** (Assistente Teológico Católico criado a partir desta API)](https://amicusdei.streamlit.app/) \n",
     version="1.0.0",
     lifespan=embedders_inicialization_lifespan
 )
 app.include_router(hybrid_search_route)
+
 
 @app.exception_handler(RequestValidationError)
 async def hybrid_search_request_validation_error_handler(request: Request,
