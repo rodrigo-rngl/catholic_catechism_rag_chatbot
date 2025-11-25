@@ -1,4 +1,4 @@
-<h1><p align="center"><b>AmicusDei – API RAG do Catecismo da Igreja Católica</b></p></h1> 
+<h1><p align="center"><b>API RAG do Catecismo da Igreja Católica</b></p></h1> 
 
 <p align="center"><a href="https://catholic-catechism-rag-api.aight.com.br/"><img src="src/img/api-rag-cic.svg" alt=""></a></p> 
 
