@@ -17,7 +17,8 @@ class QdrantVectorDBConnectionHandler:
             return AsyncQdrantClient(
                 url=self.__url,
                 api_key=self.__api_key,
-                prefer_grpc=True
+                prefer_grpc=True,
+                timeout=60
             )
         except Exception as exception:
             logger.error(f'Exceção ao gerar conexão com banco de dados vetorial Qdrant.\n'

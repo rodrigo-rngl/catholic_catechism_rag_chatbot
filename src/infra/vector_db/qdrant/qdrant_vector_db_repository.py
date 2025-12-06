@@ -2,6 +2,7 @@ from typing import List
 from qdrant_client.http.models import PointStruct
 from datetime import datetime, timezone, timedelta
 from src.validators.models.SearchOutput import SearchOutput
+from src.validators.models.RetrieveOutput import RetrieveOutput
 from src.validators.models.QueryEmbedding import QueryEmbeddingBase
 from src.infra.interfaces.qdrant_points_searcher_interface import QdrantPointsSearcherInterface
 from src.infra.interfaces.qdrant_collection_creator_interface import QdrantCollectionCreatorInterface
@@ -34,10 +35,6 @@ class QdrantVectorDBRepository:
                 collection_name=self.collection_name)
 
     async def upsert_points(self, ingestion_points: List[PointStruct]) -> None:
-        if not await self.__collection_already_exist():
-            raise NameError(
-                f"A coleção '{self.collection_name}' não existe para que estruras de pontos possam ser armazenadas.")
-
         async with QdrantVectorDBConnectionHandler() as qdrant:
             logger.info(
                 f"Enviando {len(ingestion_points)} estruturas de pontos de ingestão para '{self.collection_name}'...")
@@ -50,6 +47,36 @@ class QdrantVectorDBRepository:
             except Exception:
                 logger.exception(
                     f"Exceção ao inserir as estruturas de pontos de ingestão na coleção '{self.collection_name}'.")
+                raise
+
+    async def retrieve_points(self, paragraph_numbers: List[int]) -> List[RetrieveOutput]:
+        logger.info("    Iniciando a recuperação de pontos vetoriais...")
+
+        UTC_MINUS_3 = timezone(timedelta(hours=-3))
+        start_time = datetime.now(tz=UTC_MINUS_3)
+
+        if not await self.__collection_already_populated():
+            raise NameError(
+                f"A coleção '{self.collection_name}' não existe! Assim, não há como realizar a busca de pontos vetoriais.")
+
+        async with QdrantVectorDBConnectionHandler() as qdrant:
+            try:
+                response = await qdrant.client.retrieve(collection_name=self.collection_name, ids=paragraph_numbers)
+
+                retrieve_output = [RetrieveOutput(
+                    text=point.payload['text'],
+                    localization=point.payload['localization'])
+                    for point in response if point.payload != None]
+
+                search_time_ms = self.__calculate_search_time(
+                    start_time=start_time)
+
+                logger.info(
+                    f"    Pontos vetoriais para foram recuperados com sucesso! Tempo de Busca: {search_time_ms}ms")
+                return retrieve_output
+            except Exception:
+                logger.exception(
+                    f"Exceção ao recuperar os pontos vetoriais na coleção '{self.collection_name}'.")
                 raise
 
     async def search_points(self, embedding: QueryEmbeddingBase, top_k: int) -> List[SearchOutput]:
@@ -83,7 +110,7 @@ class QdrantVectorDBRepository:
             try:
                 collection_info = await qdrant.client.get_collection(self.collection_name)
                 logger.info(
-                    f"A coleção '{self.collection_name}' agora possui {collection_info.points_count} parágrafos.")
+                    f"A coleção '{self.collection_name}' agora possui {collection_info.points_count} pontos de ingestão.")
             except Exception:
                 logger.exception(
                     f"Exceção ao obter informações sobre a coleção '{self.collection_name}'.")

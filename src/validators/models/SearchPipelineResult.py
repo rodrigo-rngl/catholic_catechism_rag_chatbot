@@ -1,4 +1,4 @@
-from typing import Sequence, Union
+from typing import List, Union
 from pydantic import BaseModel
 from src.validators.models.QueryValidation import QueryValidation
 from src.validators.models.SearchOutput import SearchOutput
@@ -6,7 +6,7 @@ from src.validators.models.SearchOutput import SearchOutput
 
 class SearchSuccess(BaseModel):
     query_validation: QueryValidation
-    search_outputs: Sequence[SearchOutput]
+    search_outputs: List[SearchOutput]
 
 
 class SearchClarification(BaseModel):

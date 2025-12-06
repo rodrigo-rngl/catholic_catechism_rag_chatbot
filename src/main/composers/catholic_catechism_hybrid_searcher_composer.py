@@ -8,18 +8,15 @@ from src.presentation.controllers.catholic_catechism_paragraphs_searcher_control
 
 def catholic_catechism_hybrid_searcher_composer() -> CatholicCatechismSeacherController:
     search_type = "Híbrida"
-    collection_name = "CatholicCatechismParagraphs"
+    collection_name = "Parágrafos do Catecismo (Hybrid Search)"
 
     embedder = FastembedEmbedderFactory(
         search_type=search_type).produce()
 
-    collection_creator = QdrantCollectionCreatorFactory(
-        search_type=search_type).produce()
     points_searcher = QdrantPointsSearcherFactory(
         search_type=search_type).produce()
 
     repository = QdrantVectorDBRepository(collection_name=collection_name,
-                                          collection_creator=collection_creator,
                                           points_searcher=points_searcher)
 
     use_case = CatholicCatechismParagraphsSearcher(

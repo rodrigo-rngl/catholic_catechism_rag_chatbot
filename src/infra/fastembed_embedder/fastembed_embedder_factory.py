@@ -9,7 +9,7 @@ logger = setup_logger(name="FastembedEmbedderFactory")
 
 
 class FastembedEmbedderFactory:
-    def __init__(self, search_type: Literal['Semântica', 'Esparsa', 'Híbrida']):
+    def __init__(self, search_type: Literal['Semântica', 'Esparsa', 'Híbrida']) -> None:
         self.search_type = search_type
 
     def produce(self) -> FastembedEmbedderInterface:

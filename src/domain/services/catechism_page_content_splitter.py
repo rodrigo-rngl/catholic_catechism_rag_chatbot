@@ -7,25 +7,24 @@ class CatechismPageContentSplitter:
     def __init__(self) -> None:
         self.payloads_list: List[Payload] = []
 
-    def split(self, elements: List[str]) -> None:
-        current_part = ""
-        current_section = ""
-        current_chapter = ""
-        current_article = ""
-        current_paragraphs_group = ""
-        current_internal_section = ""
-        current_subsection = ""
-
-        self.n_splitted_paragraphs = 0
-
-        self.paragraph_id = 0
-
-        self.__buffer_paragraph = ""
-        self.__buffer_localization = {}
-
         self.__incorrect_paragraphs_number_dict = {1495: 1498,
                                                    2117: 2217,
                                                    1439: 2439}
+
+    def split(self, elements: List[str]) -> None:
+        self.__buffer_paragraph_id = 0
+        self.__buffer_paragraph = ""
+        self.__buffer_localization = {
+            "PART": "",
+            "SECTION": "",
+            "CHAPTER": "",
+            "ARTICLE": "",
+            "PARAGRAPHS_GROUP": "",
+            "INTERNAL_SECTION": "",
+            "THEMATIC_SUBSECTION": ""
+        }
+
+        self.n_splitted_paragraphs = 0
 
         i = 0
         n_elements = len(elements)
@@ -43,133 +42,128 @@ class CatechismPageContentSplitter:
                 break
 
             if self.__is_part(cleaned_text):
-                current_part = cleaned_text
-
                 name_part = self.__clean_text(elements[i + 1])
-                if name_part and current_part != 'PRÓLOGO':
-                    current_part = cleaned_text + ' - ' + name_part
+                if name_part and cleaned_text != 'PRÓLOGO':
+                    self.__buffer_localization['PART'] = cleaned_text + \
+                        ' - ' + name_part
                     i += 1
+                else:
+                    self.__buffer_localization['PART'] = cleaned_text
 
-                current_section = ""
-                current_chapter = ""
-                current_article = ""
-                current_paragraphs_group = ""
-                current_internal_section = ""
-                current_subsection = ""
-
-                self.__create_payloads()
+                self.__buffer_localization['SECTION'] = ""
+                self.__buffer_localization['CHAPTER'] = ""
+                self.__buffer_localization['ARTICLE'] = ""
+                self.__buffer_localization['PARAGRAPHS_GROUP'] = ""
+                self.__buffer_localization['INTERNAL_SECTION'] = ""
+                self.__buffer_localization['THEMATIC_SUBSECTION'] = ""
 
                 i += 1
                 continue
 
             if self.__is_section(cleaned_text):
-                current_section = cleaned_text
+                self.__create_payloads()
 
                 name_section = self.__clean_text(elements[i + 1])
-                if name_section and current_section != 'INTRODUÇÃO':
-                    current_section = current_section + ' - ' + name_section
+                if name_section and cleaned_text != 'INTRODUÇÃO':
+                    self.__buffer_localization['SECTION'] = cleaned_text + \
+                        ' - ' + name_section
                     i += 1
+                else:
+                    self.__buffer_localization['SECTION'] = cleaned_text
 
-                current_chapter = ""
-                current_article = ""
-                current_paragraphs_group = ""
-                current_internal_section = ""
-                current_subsection = ""
-
-                self.__create_payloads()
+                self.__buffer_localization['CHAPTER'] = ""
+                self.__buffer_localization['ARTICLE'] = ""
+                self.__buffer_localization['PARAGRAPHS_GROUP'] = ""
+                self.__buffer_localization['INTERNAL_SECTION'] = ""
+                self.__buffer_localization['THEMATIC_SUBSECTION'] = ""
 
                 i += 1
                 continue
 
             if self.__is_chapter(cleaned_text):
-                current_chapter = cleaned_text
+                self.__create_payloads()
 
                 name_chapter = self.__clean_text(elements[i + 1])
                 if name_chapter:
-                    current_chapter = current_chapter + ' - ' + name_chapter
+                    self.__buffer_localization['CHAPTER'] = cleaned_text + \
+                        ' - ' + name_chapter
                     i += 1
+                else:
+                    self.__buffer_localization['CHAPTER'] = cleaned_text
 
-                current_article = ""
-                current_paragraphs_group = ""
-                current_internal_section = ""
-                current_subsection = ""
-
-                self.__create_payloads()
+                self.__buffer_localization['ARTICLE'] = ""
+                self.__buffer_localization['PARAGRAPHS_GROUP'] = ""
+                self.__buffer_localization['INTERNAL_SECTION'] = ""
+                self.__buffer_localization['THEMATIC_SUBSECTION'] = ""
 
                 i += 1
                 continue
 
             if self.__is_article(cleaned_text):
-                current_article = cleaned_text
+                self.__create_payloads()
 
                 name_article = self.__clean_text(elements[i + 1])
                 if name_article:
-                    current_article = current_article + ' - ' + name_article
+                    self.__buffer_localization['ARTICLE'] = cleaned_text + \
+                        ' - ' + name_article
                     i += 1
+                else:
+                    self.__buffer_localization['ARTICLE'] = cleaned_text
 
-                current_paragraphs_group = ""
-                current_internal_section = ""
-                current_subsection = ""
-
-                self.__create_payloads()
+                self.__buffer_localization['PARAGRAPHS_GROUP'] = ""
+                self.__buffer_localization['INTERNAL_SECTION'] = ""
+                self.__buffer_localization['THEMATIC_SUBSECTION'] = ""
 
                 i += 1
                 continue
 
             if self.__is_paragraphs_group(cleaned_text):
-                current_paragraphs_group = cleaned_text
+                self.__create_payloads()
 
                 name_paragraphs_group = self.__clean_text(elements[i + 1])
                 if name_paragraphs_group:
-                    current_paragraphs_group = current_paragraphs_group + ' - ' + name_paragraphs_group
+                    self.__buffer_localization['PARAGRAPHS_GROUP'] = cleaned_text + \
+                        ' - ' + name_paragraphs_group
                     i += 1
+                else:
+                    self.__buffer_localization['PARAGRAPHS_GROUP'] = cleaned_text
 
-                current_internal_section = ""
-                current_subsection = ""
-
-                self.__create_payloads()
+                self.__buffer_localization['INTERNAL_SECTION'] = ""
+                self.__buffer_localization['THEMATIC_SUBSECTION'] = ""
 
                 i += 1
                 continue
 
             if self.__is_internal_section(cleaned_text):
-                current_internal_section = cleaned_text
-
-                current_subsection = ""
-
                 self.__create_payloads()
+
+                self.__buffer_localization['INTERNAL_SECTION'] = cleaned_text
+
+                self.__buffer_localization['THEMATIC_SUBSECTION'] = ""
 
                 i += 1
                 continue
 
             if self.__is_subsection(cleaned_text):
-                current_subsection = cleaned_text
-
                 self.__create_payloads()
+
+                self.__buffer_localization['THEMATIC_SUBSECTION'] = cleaned_text
 
                 i += 1
                 continue
 
             if self.__is_paragraph(cleaned_text):
-                self.__buffer_localization_is_not_empty()
                 self.__create_payloads()
 
-                self.__buffer_paragraph = cleaned_text
-                self.__buffer_localization = {
-                    "PART": current_part,
-                    "SECTION": current_section,
-                    "CHAPTER": current_chapter,
-                    "ARTICLE": current_article,
-                    "PARAGRAPHS_GROUP": current_paragraphs_group,
-                    "INTERNAL_SECTION": current_internal_section,
-                    "THEMATIC_SUBSECTION": current_subsection
-                }
-
                 splited_text = self.__split_topic_text(text=cleaned_text)
-                self.paragraph_id = int(splited_text[0].strip())
 
-                if self.paragraph_id == 750:
-                    print("")
+                text_id = int(splited_text[0].strip())
+                if (text_id < self.__buffer_paragraph_id) and text_id in self.__incorrect_paragraphs_number_dict:
+                    text_id = self.__incorrect_paragraphs_number_dict[text_id]
+
+                self.__buffer_paragraph_id = text_id
+
+                self.__buffer_paragraph = cleaned_text
 
                 self.n_splitted_paragraphs += 1
 
@@ -181,7 +175,6 @@ class CatechismPageContentSplitter:
                 i += 1
                 continue
 
-            self.__restart_buffers()
             i += 1
 
     @classmethod
@@ -238,11 +231,10 @@ class CatechismPageContentSplitter:
         splited_text = self.__split_topic_text(text=text)
 
         text_id = int(splited_text[0].strip())
-
-        if text_id < self.paragraph_id and text_id in self.__incorrect_paragraphs_number_dict:
+        if (text_id < self.__buffer_paragraph_id) and text_id in self.__incorrect_paragraphs_number_dict:
             text_id = self.__incorrect_paragraphs_number_dict[text_id]
 
-        return bool(self.paragraph_id is not None and text_id > self.paragraph_id)
+        return bool(text_id > self.__buffer_paragraph_id)
 
     def __start_referencies_section(self, text: str) -> bool:
         if text in ['Notas', 'CREDO', 'OS DEZ MANDAMENTOS']:
@@ -251,27 +243,26 @@ class CatechismPageContentSplitter:
             return False
 
         splited_text = self.__split_topic_text(text=text)
-
         text_id = int(splited_text[0])
+
         pattern = r'^(?:[IVXLCDM]+)\b|(?:Cf)|(?:CatRom)|(?:Santo)|(?:São)'
 
-        return bool(self.paragraph_id is not None and text_id < self.paragraph_id and re.match(pattern, splited_text[1].strip()))
+        return bool(text_id < self.__buffer_paragraph_id and re.match(pattern, splited_text[1].strip()))
 
-    def __restart_buffers(self) -> None:
-        self.__buffer_paragraph = ""
-        self.__buffer_localization = dict()
+    def __buffer_localization_is_empty(self) -> bool:
+        return bool(all(valor == "" for valor in self.__buffer_localization.values()))
 
     def __create_payloads(self) -> None:
-        if self.__buffer_paragraph and self.__buffer_localization:
+        if self.__buffer_localization_is_empty():
+            raise ValueError(
+                f'Os valores de localização do parágrafo buffer {self.__buffer_paragraph_id} estão vazios.')
+
+        if self.__buffer_paragraph_id and self.__buffer_paragraph:
             payload = Payload(
+                id=self.__buffer_paragraph_id,
                 text=self.__buffer_paragraph,
                 localization=self.__buffer_localization
             )
 
             self.payloads_list.append(payload)
-        self.__restart_buffers()
-
-    def __buffer_localization_is_not_empty(self) -> None:
-        if self.__buffer_localization != {} and all(valor == "" for valor in self.__buffer_localization.values()):
-            raise ValueError(
-                f'Os valores de localização do parágrafo buffer {self.paragraph_id} estão vazios.')
+        self.__buffer_paragraph = ""

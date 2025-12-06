@@ -23,8 +23,8 @@ class CatechismScrapper:
         for link in page_links:
             logger.info(f'Raspando a página: {link}')
             response = self.__page_request(page_link=link)
-            html_content = response.text
 
+            html_content = response.text
             soup = BeautifulSoup(html_content, 'html.parser')
 
             content_container = self.__find_content_container(soup=soup)
@@ -46,8 +46,8 @@ class CatechismScrapper:
         logger.info(
             "Raspando os links da página principal do site do catecismo da Igreja Católica...")
         response = self.__page_request(page_link=self.main_page)
-        html_content = response.text
 
+        html_content = response.text
         soup = BeautifulSoup(html_content, 'html.parser')
 
         # Lista para armazenar os links de outras páginas, contidas e disponíveis na página principal.

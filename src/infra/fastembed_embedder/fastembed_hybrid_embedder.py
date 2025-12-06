@@ -60,7 +60,7 @@ class FastembedHybridEmbedder(FastembedEmbedderInterface[IngestionHybridEmbeddin
     @classmethod
     def __initialize_embedding_models(cls) -> Tuple[TextEmbedding, Bm25, LateInteractionTextEmbedding]:
         logger.info(
-            f'Inicializando modelos de Embeddings para Busca Híbrida...')
+            f'Inicializando modelos de Embeddings Híbridos...')
 
         logger.info(f'Inicializando o Dense Embedding...')
         dense_embedding_model = TextEmbedding(

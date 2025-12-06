@@ -1,34 +1,38 @@
 import uuid
 from typing import List
-from qdrant_client.http.models import PointStruct
 from src.validators.models.Payload import Payload
-from src.validators.models.IngestionEmbeddings import IngestionDenseEmbeddings
+from qdrant_client.http.models import PointStruct, SparseVector
+from src.validators.models.IngestionEmbeddings import IngestionHybridEmbeddings
 from src.infra.interfaces.ingestion_point_structures_creators_interface import IngestionPointStructuresCreatorsInterface
 
 from src.config.logger_config import setup_logger
-logger = setup_logger(name="DenseIngestionPointStructuresCreators")
+
+logger = setup_logger(name="HybridIngestionPointStructuresCreators")
 
 
-class DenseIngestionPointStructuresCreator(IngestionPointStructuresCreatorsInterface):
-    def __init__(self, embeddings: IngestionDenseEmbeddings) -> None:
+class HybridIngestionPointStructuresCreator(IngestionPointStructuresCreatorsInterface):
+    def __init__(self, embeddings: IngestionHybridEmbeddings) -> None:
         self.embeddings = embeddings
 
     def create(self, payloads: List[Payload]) -> List[PointStruct]:
         logger.info(
             f'  Transformando {len(payloads)} payloads e embeddings em estruturas de pontos para ingestão...')
 
-        texts = [payload.text for payload in payloads]
-
         ingestion_points_list = []
 
-        for (dense, sparse, late), text in zip(self.embeddings.iter_components(), texts):
-            if dense:
+        for (dense, sparse, late), payload in zip(self.embeddings.iter_components(), payloads):
+            if sparse and dense and late:
                 try:
                     point = PointStruct(
-                        id=str(uuid.uuid4()),
+                        id=payload.id,
                         vector={
-                            "dense": dense},
-                        payload={"text": text}
+                            "dense": dense,
+                            "colbertv2.0": late,
+                            "sparse": SparseVector(indices=sparse.indices,
+                                                   values=sparse.values)
+                        },
+                        payload={"text": payload.text,
+                                 "localization": payload.localization}
                     )
 
                     ingestion_points_list.append(point)

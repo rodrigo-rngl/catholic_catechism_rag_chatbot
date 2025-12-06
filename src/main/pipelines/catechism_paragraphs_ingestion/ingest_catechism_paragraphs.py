@@ -1,3 +1,4 @@
+from typing import Literal
 import asyncio
 from dotenv import load_dotenv
 from src.domain.services.catechism_scrapper import CatechismScrapper
@@ -14,8 +15,8 @@ async def ingest() -> None:
     scrapper = CatechismScrapper()
     payloads = scrapper.scrape()
 
-    collection_name = "CatholicCatechismParagraphs"
-    search_type = "Híbrida"
+    collection_name = "Parágrafos do Catecismo (Hybrid Search)"
+    search_type: Literal["Semântica", "Híbrida"] = "Híbrida"
 
     collection_creator = QdrantCollectionCreatorFactory(
         search_type=search_type).produce()
